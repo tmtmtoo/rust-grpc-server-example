@@ -1,5 +1,5 @@
 pub mod model;
 
-mod greeting_repository;
+mod repository;
 
-pub use greeting_repository::*;
+pub use repository::*;
