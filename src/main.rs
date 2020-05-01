@@ -1,3 +1,5 @@
+#![cfg_attr(feature = "cargo-clippy", allow(dead_code))]
+
 mod component;
 
 #[macro_use]
