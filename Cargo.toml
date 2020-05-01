@@ -21,6 +21,7 @@ anyhow = "1.0.27"
 thiserror = "1.0.16"
 derive-new = "0.5.8"
 async-trait = "0.1.30"
+boolinator = "2.4.0"
 
 [build-dependencies]
 tonic-build = "0.2"
