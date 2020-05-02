@@ -23,7 +23,6 @@ jobs:
         with:
           path: ~/.rustup/toolchains
           key: ${{ runner.os }}-cargo-toolchains-${{ hashFiles('**/rust-toolchain') }}
-
       - run: rustup component add clippy rustfmt && cargo install cargo-audit
       - run: cargo fmt -- --check
       - run: cargo clippy -- -D warnings
