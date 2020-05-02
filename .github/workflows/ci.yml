@@ -6,7 +6,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-    - uses: icepuma/rust-action@master
-      with:
-          args: cargo fmt -- --check && cargo clippy -- -D warnings && cargo test
+      - uses: actions/checkout@v2
+      - uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
