@@ -1,4 +1,5 @@
-#[derive(Debug, Clone, PartialEq)]
+use derive_more::*;
+#[derive(AsRef, Debug, Clone, PartialEq)]
 pub struct Message(String);
 
 impl Message {
@@ -9,12 +10,6 @@ impl Message {
             prefix = prefix,
             name = name
         ))
-    }
-}
-
-impl AsRef<str> for Message {
-    fn as_ref(&self) -> &str {
-        self.0.as_str()
     }
 }
 

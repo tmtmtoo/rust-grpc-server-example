@@ -1,11 +1,12 @@
 use anyhow::*;
+use derive_more::*;
 use std::convert::TryFrom;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, AsRef)]
 pub struct Uuid(uuid::Uuid);
 
 impl Uuid {
-    pub fn new() -> Self {
+    pub fn random() -> Self {
         Self(uuid::Uuid::new_v4())
     }
 }
@@ -45,7 +46,7 @@ mod tests {
 
     #[test]
     fn new_as_uuid() {
-        let id = Uuid::new();
+        let id = Uuid::random();
         let uuid_string = id.to_string();
         let actual = uuid::Uuid::parse_str(uuid_string.as_str());
         assert!(actual.is_ok())

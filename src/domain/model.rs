@@ -4,9 +4,8 @@ mod id;
 mod message;
 mod name;
 
-use datetime::*;
-use id::*;
-use name::*;
-
+pub use datetime::*;
 pub use greeting::*;
+pub use id::*;
 pub use message::*;
+pub use name::*;

@@ -1,8 +1,9 @@
 use anyhow::*;
 use boolinator::*;
+use derive_more::*;
 use std::convert::TryFrom;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, AsRef)]
 pub struct Name(String);
 
 impl Name {
@@ -15,12 +16,6 @@ impl TryFrom<&str> for Name {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         (value.len() <= Self::MAX_LENGTH).ok_or_else(|| Error::msg("too long"))?;
         Ok(Self(value.to_string()))
-    }
-}
-
-impl AsRef<str> for Name {
-    fn as_ref(&self) -> &str {
-        self.0.as_str()
     }
 }
 

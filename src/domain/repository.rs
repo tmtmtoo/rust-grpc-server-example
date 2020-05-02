@@ -1,26 +1,24 @@
 use anyhow::*;
+use derive_more::{AsRef, Display};
 use std::sync::Arc;
-use thiserror::Error as ThisError;
+use thiserror::Error;
 
-#[derive(ThisError, Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Display)]
 pub enum QueryErrorKind {
-    #[error("failed to connect store")]
     FailedToConnectStore,
-    #[error("failed to construct request")]
     FailedToConstructRequest,
-    #[error("invalid request")]
     InvalidRequest,
-    #[error("invalid response")]
     InvalidResponse,
-    #[error("connection aborted")]
     Aborted,
-    #[error("unknown storing error")]
     Other,
 }
 
-#[derive(ThisError, Debug, Clone)]
+#[derive(Error, Display, Debug, Clone, AsRef)]
+#[display(fmt = "{}: {}", kind, source)]
 pub struct QueryError {
+    #[as_ref]
     kind: QueryErrorKind,
+    #[as_ref]
     source: Arc<Error>,
 }
 
@@ -33,33 +31,21 @@ impl QueryError {
     }
 }
 
-impl std::fmt::Display for QueryError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}: {}", self.kind, self.source)
-    }
-}
-
 impl PartialEq for QueryError {
     fn eq(&self, other: &Self) -> bool {
         self.kind.eq(&other.kind)
     }
 }
 
-impl AsRef<Error> for QueryError {
-    fn as_ref(&self) -> &Error {
-        &*self.source
-    }
-}
-
-impl AsRef<QueryErrorKind> for QueryError {
-    fn as_ref(&self) -> &QueryErrorKind {
-        &self.kind
-    }
-}
-
 #[derive(new)]
 pub struct SaveRequest<'a, T> {
     value: &'a T,
+}
+
+impl<'a, T> AsRef<T> for SaveRequest<'a, T> {
+    fn as_ref(&self) -> &T {
+        self.value
+    }
 }
 
 pub type SaveResult<T> = Result<T, QueryError>;

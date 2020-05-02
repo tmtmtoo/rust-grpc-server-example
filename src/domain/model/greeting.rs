@@ -1,17 +1,21 @@
 use super::*;
 use anyhow::*;
+use derive_more::AsRef;
 use std::convert::TryFrom;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, AsRef)]
 pub struct Greeting {
+    #[as_ref]
     id: Uuid,
+    #[as_ref]
     name: Name,
+    #[as_ref]
     created_at: Datetime,
 }
 
 impl Greeting {
     pub fn try_new(name: impl Into<String>) -> Result<Self> {
-        let id = Uuid::new();
+        let id = Uuid::random();
         let name =
             Name::try_from(name.into().as_str()).with_context(|| "failed to convert name")?;
         let created_at = Datetime::now();
