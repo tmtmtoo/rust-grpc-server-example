@@ -40,10 +40,10 @@ where
 {
     async fn handle(&self, request: &'a RQ) -> GreetUseCaseResult {
         self.repository
-            .handle(&request.into().into())
+            .handle(&request.into())
             .await
             .map(|_| request.into().greeting.hello())
-            .map_err(|e| GreetUseCaseError::FailedToHandleStoring(e))
+            .map_err(GreetUseCaseError::FailedToHandleStoring)
     }
 }
 
