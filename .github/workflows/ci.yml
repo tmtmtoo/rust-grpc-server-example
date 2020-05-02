@@ -12,3 +12,5 @@ jobs:
       - run: cargo fmt -- --check
       - run: cargo audit
       - run: cargo test
+      - run: docker-compose up -d
+      - run: cargo test -- --ignored
