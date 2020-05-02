@@ -17,7 +17,7 @@ impl<'a> Into<SaveRequest<'a, model::Greeting>> for &'a GreetUseCaseRequest<'a> 
 
 #[derive(ThisError, Clone, Debug, PartialEq)]
 pub enum GreetUseCaseError {
-    #[error("failed to handle storing")]
+    #[error("failed to handle storing: {0}")]
     FailedToHandleStoring(QueryError),
 }
 
