@@ -8,8 +8,6 @@ pub enum QueryErrorKind {
     FailedToConnectStore,
     #[error("failed to construct request")]
     FailedToConstructRequest,
-    #[error("unauthorized request")]
-    UnauthorizedRequest,
     #[error("invalid request")]
     InvalidRequest,
     #[error("invalid response")]
@@ -59,8 +57,9 @@ impl AsRef<QueryErrorKind> for QueryError {
     }
 }
 
-pub struct SaveRequest<T> {
-    value: T,
+#[derive(new)]
+pub struct SaveRequest<'a, T> {
+    value: &'a T,
 }
 
 pub type SaveResult<T> = Result<T, QueryError>;
@@ -80,8 +79,12 @@ pub struct StubRepository {
 
 #[cfg(test)]
 #[async_trait]
-impl Component<SaveRequest<Greeting>, SaveResult<()>> for StubRepository {
-    async fn handle(&self, _: &SaveRequest<Greeting>) -> SaveResult<()> {
+impl<'a, RQ: 'a> Component<'a, RQ, SaveResult<()>> for StubRepository
+where
+    RQ: Send + Sync,
+    &'a RQ: Into<SaveRequest<'a, Greeting>>,
+{
+    async fn handle(&self, _: &'a RQ) -> SaveResult<()> {
         self.save_greeting_result.clone()
     }
 }

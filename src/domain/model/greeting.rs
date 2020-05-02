@@ -22,10 +22,8 @@ impl Greeting {
             created_at,
         })
     }
-}
 
-impl Greet for Greeting {
-    fn hello(&self) -> Message {
+    pub fn hello(&self) -> Message {
         Message::new("hello", self.name.as_ref(), "🎉")
     }
 }
