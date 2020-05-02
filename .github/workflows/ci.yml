@@ -7,9 +7,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/registry
+          key: ${{ runner.os }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.cargo/git
+          key: ${{ runner.os }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: target
+          key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v1
+        with:
+          path: ~/.rustup/toolchains
+          key: ${{ runner.os }}-cargo-toolchains-${{ hashFiles('**/rust-toolchain') }}
+
       - run: rustup component add clippy rustfmt && cargo install cargo-audit
-      - run: cargo clippy -- -D warnings
       - run: cargo fmt -- --check
+      - run: cargo clippy -- -D warnings
       - run: cargo audit
       - run: cargo test
       - run: docker-compose up -d
