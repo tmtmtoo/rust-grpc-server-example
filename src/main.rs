@@ -11,7 +11,9 @@ extern crate log;
 
 mod component;
 mod domain;
+mod gateway;
 mod infrastructure;
+mod schema;
 mod usecase;
 
 fn main() {

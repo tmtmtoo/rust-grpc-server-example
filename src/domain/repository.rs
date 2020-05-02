@@ -42,6 +42,12 @@ pub struct SaveRequest<'a, T> {
     value: &'a T,
 }
 
+impl<'a, T> AsRef<T> for SaveRequest<'a, T> {
+    fn as_ref(&self) -> &T {
+        self.value
+    }
+}
+
 pub type SaveResult<T> = Result<T, QueryError>;
 
 #[cfg(test)]
