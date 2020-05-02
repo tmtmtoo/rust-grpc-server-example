@@ -7,6 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: rustup component add clippy rustfmt
+      - run: rustup component add clippy rustfmt && cargo install cargo-audit
       - run: cargo clippy -- -D warnings
       - run: cargo fmt -- --check
+      - run: cargo audit
+      - run: cargo test
