@@ -22,8 +22,8 @@ jobs:
       - run: rustup component add clippy rustfmt && cargo install cargo-audit
       - run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - run: cargo fmt -- --check
-      - run: cargo clippy -- -D warnings
       - run: cargo audit
+      - run: cargo clippy -- -D warnings
       - run: cargo test
       - run: docker-compose up -d
       - run: cargo test -- --ignored
