@@ -15,6 +15,8 @@ pub struct StubAdaptor {
 
 #[cfg(test)]
 pub fn get_test_transaction_manager() -> db::TransactionManager {
+    use dotenv::dotenv;
+    use std::env;
     use std::sync::Once;
 
     static mut TRANSACTION: Option<db::TransactionManager> = None;
@@ -22,7 +24,9 @@ pub fn get_test_transaction_manager() -> db::TransactionManager {
 
     unsafe {
         ONCE.call_once(|| {
-            let pool = db::connection_pool("postgres://dev@localhost:5432/dev", 4).unwrap();
+            dotenv().ok();
+            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+            let pool = db::connection_pool(database_url.as_str(), 4).unwrap();
             db::migration(&pool).unwrap();
             TRANSACTION = Some(db::TransactionManager::new(pool));
         });
