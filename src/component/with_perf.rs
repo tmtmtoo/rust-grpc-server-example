@@ -2,12 +2,7 @@ use super::*;
 use std::marker::PhantomData;
 
 #[derive(new)]
-pub struct WithPerf<RQ, RS, C>
-where
-    RQ: Send + Sync + 'static,
-    RS: Send + Sync + 'static,
-    for<'a> C: Component<'a, RQ, RS>,
-{
+pub struct WithPerf<RQ, RS, C> {
     name: &'static str,
     inner: C,
     _rq: PhantomData<RQ>,

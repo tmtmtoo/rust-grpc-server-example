@@ -25,10 +25,7 @@ pub enum GreetUseCaseError {
 pub type GreetUseCaseResult = Result<model::Message, GreetUseCaseError>;
 
 #[derive(new)]
-pub struct GreetUseCase<R>
-where
-    for<'r> R: Component<'r, GreetUseCaseRequest<'r>, SaveResult<()>>,
-{
+pub struct GreetUseCase<R> {
     repository: Arc<R>,
 }
 

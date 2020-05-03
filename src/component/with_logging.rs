@@ -3,13 +3,7 @@ use anyhow::*;
 use std::marker::PhantomData;
 
 #[derive(new)]
-pub struct WithLogging<RQ, RS, ER, C>
-where
-    RQ: std::fmt::Debug + Send + Sync + 'static,
-    RS: std::fmt::Debug + Send + Sync + 'static,
-    ER: std::fmt::Debug + Send + Sync + 'static,
-    for<'a> C: Component<'a, RQ, Result<RS, ER>>,
-{
+pub struct WithLogging<RQ, RS, ER, C> {
     name: &'static str,
     inner: C,
     _rq: PhantomData<RQ>,
