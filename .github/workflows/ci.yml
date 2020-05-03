@@ -6,24 +6,38 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - run: sudo mkdir -p ~/.cargo && sudo chown -R $(whoami):$(id -ng) ~/.cargo/
-      - uses: actions/cache@v1
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Prepare cargo directory
+        run: sudo mkdir -p ~/.cargo && sudo chown -R $(whoami):$(id -ng) ~/.cargo/
+
+      - name: Cache cargo directory
+        uses: actions/cache@v1
         with:
           path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v1
+
+      - name: Cache target directory
+        uses: actions/cache@v1
         with:
           path: target
           key: ${{ runner.os }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
-      - uses: actions/cache@v1
+
+      - name: Cache toolchains-directory
+        uses: actions/cache@v1
         with:
           path: ~/.rustup/toolchains
           key: ${{ runner.os }}-cargo-toolchains-${{ hashFiles('**/rust-toolchain') }}
-      - run: rustup component add clippy rustfmt && cargo install cargo-audit
-      - run: cargo fmt -- --check
-      - run: cargo audit
-      - run: cargo clippy -- -D warnings
-      - run: cargo test
-      - run: docker-compose up -d
-      - run: cargo test -- --ignored
+
+      - name: Install Components
+        run: rustup component add clippy rustfmt && cargo install cargo-audit
+
+      - name: Check & Test
+        run: |
+          cargo fmt -- --check \
+            && cargo audit \
+            && cargo clippy -- -D warnings \
+            && cargo test \
+            && docker-compose up -d db \
+            && cargo test -- --ignored
