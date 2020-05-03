@@ -10,14 +10,44 @@ extern crate derive_new;
 extern crate log;
 
 mod component;
+mod controller;
 mod domain;
 mod gateway;
 mod infrastructure;
 mod schema;
 mod usecase;
 
-fn main() {
+use anyhow::*;
+use component::*;
+use controller::grpc::greet_server::GreetServer;
+use controller::GreetController;
+use gateway::Adaptor;
+use infrastructure::db;
+use std::sync::Arc;
+use tonic::transport::Server;
+use usecase::GreetUseCase;
+
+#[tokio::main]
+async fn main() -> Result<()> {
     env_logger::init();
 
-    println!("Hello, world!");
+    let pool = db::connection_pool("postgres://dev@localhost:5432/dev", 4)?;
+
+    db::migration(&pool)?;
+
+    let adaptor = Arc::new(Adaptor::new(db::TransactionManager::new(pool)));
+
+    let addr = "0.0.0.0:5001".parse()?;
+
+    info!("Greet Service listening on {}", addr);
+
+    Server::builder()
+        .add_service(GreetServer::new(GreetController::new(WithLogging::new(
+            "greet usecase",
+            GreetUseCase::new(adaptor.clone()),
+        ))))
+        .serve(addr)
+        .await?;
+
+    Ok(())
 }

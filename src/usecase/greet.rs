@@ -5,6 +5,7 @@ use async_trait::async_trait;
 use std::sync::Arc;
 use thiserror::Error as ThisError;
 
+#[derive(new, Debug)]
 pub struct GreetUseCaseRequest<'a> {
     greeting: &'a model::Greeting,
 }
@@ -47,15 +48,25 @@ where
     }
 }
 
+#[derive(new)]
+pub struct GreetUseCaseStub {
+    output: GreetUseCaseResult,
+}
+
+#[async_trait]
+impl<'a, RQ: 'a> Component<'a, RQ, GreetUseCaseResult> for GreetUseCaseStub
+where
+    RQ: Send + Sync,
+    &'a RQ: Into<GreetUseCaseRequest<'a>>,
+{
+    async fn handle(&self, _: &'a RQ) -> GreetUseCaseResult {
+        self.output.clone()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    impl<'a> Into<GreetUseCaseRequest<'a>> for &'a model::Greeting {
-        fn into(self) -> GreetUseCaseRequest<'a> {
-            GreetUseCaseRequest { greeting: self }
-        }
-    }
 
     #[tokio::test]
     async fn handle_ok() {
