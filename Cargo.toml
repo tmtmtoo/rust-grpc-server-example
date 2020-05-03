@@ -24,6 +24,9 @@ async-trait = "0.1.30"
 boolinator = "2.4.0"
 derive_more = "0.99.5"
 
+[dev-dependencies]
+dotenv = "0.15.0"
+
 [build-dependencies]
 tonic-build = "0.2"
 
