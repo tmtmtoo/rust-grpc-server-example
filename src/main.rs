@@ -20,7 +20,7 @@ mod usecase;
 use anyhow::*;
 use component::*;
 use controller::grpc::greet_server::GreetServer;
-use controller::GreetController;
+use controller::{GreetController, Route};
 use gateway::Adaptor;
 use infrastructure::db;
 use std::sync::Arc;
@@ -42,10 +42,15 @@ async fn main() -> Result<()> {
     info!("Greet Service listening on {}", addr);
 
     Server::builder()
-        .add_service(GreetServer::new(GreetController::new(WithLogging::new(
-            "greet usecase",
-            GreetUseCase::new(adaptor.clone()),
-        ))))
+        .add_service(GreetServer::new(Route {
+            greet: WithLogging::new(
+                "greet controller",
+                GreetController::new(WithLogging::new(
+                    "greet usecase",
+                    GreetUseCase::new(adaptor.clone()),
+                )),
+            ),
+        }))
         .serve(addr)
         .await?;
 
