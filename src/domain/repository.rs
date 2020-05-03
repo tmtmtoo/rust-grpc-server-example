@@ -37,7 +37,7 @@ impl PartialEq for QueryError {
     }
 }
 
-#[derive(new)]
+#[derive(new, Debug)]
 pub struct SaveRequest<'a, T> {
     value: &'a T,
 }

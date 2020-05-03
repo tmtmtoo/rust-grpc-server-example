@@ -3,13 +3,7 @@ use anyhow::*;
 use std::marker::PhantomData;
 
 #[derive(new)]
-struct WithLogging<RQ, RS, ER, C>
-where
-    RQ: std::fmt::Debug + Send + Sync,
-    RS: std::fmt::Debug + Send + Sync,
-    ER: std::fmt::Debug + Send + Sync,
-    for<'a> C: Component<'a, RQ, Result<RS, ER>>,
-{
+pub struct WithLogging<RQ, RS, ER, C> {
     name: &'static str,
     inner: C,
     _rq: PhantomData<RQ>,
@@ -20,9 +14,9 @@ where
 #[async_trait]
 impl<'b, RQ, RS, ER, C> Component<'b, RQ, Result<RS, ER>> for WithLogging<RQ, RS, ER, C>
 where
-    RQ: std::fmt::Debug + Send + Sync,
-    RS: std::fmt::Debug + Send + Sync,
-    ER: std::fmt::Debug + Send + Sync,
+    RQ: std::fmt::Debug + Send + Sync + 'static,
+    RS: std::fmt::Debug + Send + Sync + 'static,
+    ER: std::fmt::Debug + Send + Sync + 'static,
     for<'a> C: Component<'a, RQ, Result<RS, ER>>,
 {
     async fn handle(&self, request: &'b RQ) -> Result<RS, ER> {
