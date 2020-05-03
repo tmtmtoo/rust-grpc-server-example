@@ -7,6 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - run: sudo mkdir ~/.cargo && sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - uses: actions/cache@v1
         with:
           path: ~/.cargo
@@ -20,7 +21,6 @@ jobs:
           path: ~/.rustup/toolchains
           key: ${{ runner.os }}-cargo-toolchains-${{ hashFiles('**/rust-toolchain') }}
       - run: rustup component add clippy rustfmt && cargo install cargo-audit
-      - run: sudo chown -R $(whoami):$(id -ng) ~/.cargo/
       - run: cargo fmt -- --check
       - run: cargo audit
       - run: cargo clippy -- -D warnings
