@@ -10,10 +10,11 @@ embed_migrations!();
 pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
 
 pub fn connection_pool(
-    connection_string: &str,
+    connection_string: impl Into<String>,
     max_size: u32,
 ) -> Result<ConnectionPool, PoolError> {
-    let manager = diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(connection_string);
+    let manager =
+        diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(connection_string.into());
 
     diesel::r2d2::Pool::builder()
         .max_size(max_size)
