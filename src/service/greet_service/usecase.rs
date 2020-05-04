@@ -1,5 +1,6 @@
+use super::*;
 use crate::component::*;
-use crate::domain::*;
+use crate::service::query_error::*;
 use anyhow::*;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -10,9 +11,9 @@ pub struct GreetUseCaseRequest<'a> {
     greeting: &'a model::Greeting,
 }
 
-impl<'a> Into<SaveRequest<'a, model::Greeting>> for &'a GreetUseCaseRequest<'a> {
-    fn into(self) -> SaveRequest<'a, model::Greeting> {
-        SaveRequest::new(&self.greeting)
+impl<'a> Into<SaveGreetingRequest<'a>> for &'a GreetUseCaseRequest<'a> {
+    fn into(self) -> SaveGreetingRequest<'a> {
+        SaveGreetingRequest::new(&self.greeting)
     }
 }
 
@@ -34,7 +35,7 @@ impl<'a, RQ: 'a, R> Component<'a, RQ, GreetUseCaseResult> for GreetUseCase<R>
 where
     RQ: Send + Sync,
     &'a RQ: Into<GreetUseCaseRequest<'a>>,
-    for<'r> R: Component<'r, GreetUseCaseRequest<'r>, SaveResult<()>>,
+    for<'r> R: Component<'r, GreetUseCaseRequest<'r>, SaveGreetingResult>,
 {
     async fn handle(&self, request: &'a RQ) -> GreetUseCaseResult {
         self.repository

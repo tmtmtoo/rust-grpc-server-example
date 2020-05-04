@@ -23,14 +23,16 @@ derive-new = "0.5.8"
 async-trait = "0.1.30"
 boolinator = "2.4.0"
 derive_more = "0.99.5"
+envconfig = "0.8.0"
+envconfig_derive = "0.8.0"
 
 [dev-dependencies]
 dotenv = "0.15.0"
-
-[build-dependencies]
-tonic-build = "0.2"
 
 [dev-dependencies.cargo-husky]
 version = "1.4.0"
 default-features = false
 features = ["user-hooks"]
+
+[build-dependencies]
+tonic-build = "0.2"

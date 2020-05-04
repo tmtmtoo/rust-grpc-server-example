@@ -1,16 +1,14 @@
-mod greet;
-
-pub use greet::*;
-
-pub mod grpc {
+mod proto {
     tonic::include_proto!("greet");
 }
 
 use crate::component::*;
 use anyhow::*;
-use grpc::greet_server::Greet;
-use grpc::{HelloReply, HelloRequest};
-use tonic::{Request, Response, Status};
+use proto::greet_server::Greet;
+
+pub use proto::greet_server::GreetServer;
+pub use proto::{HelloReply, HelloRequest};
+pub use tonic::{Request, Response, Status};
 
 pub struct Route<G> {
     pub greet: G,

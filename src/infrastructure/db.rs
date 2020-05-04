@@ -10,10 +10,11 @@ embed_migrations!();
 pub type ConnectionPool = Pool<ConnectionManager<PgConnection>>;
 
 pub fn connection_pool(
-    connection_string: &str,
+    connection_string: impl Into<String>,
     max_size: u32,
 ) -> Result<ConnectionPool, PoolError> {
-    let manager = diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(connection_string);
+    let manager =
+        diesel::r2d2::ConnectionManager::<diesel::PgConnection>::new(connection_string.into());
 
     diesel::r2d2::Pool::builder()
         .max_size(max_size)
@@ -49,5 +50,27 @@ impl TransactionManager {
     {
         let conn = self.0.get()?;
         conn.transaction(|| f(DbConn(&*conn)))
+    }
+}
+
+#[cfg(test)]
+pub fn get_test_transaction_manager() -> TransactionManager {
+    use dotenv::dotenv;
+    use std::env;
+    use std::sync::Once;
+
+    static mut TRANSACTION: Option<TransactionManager> = None;
+    static ONCE: Once = Once::new();
+
+    unsafe {
+        ONCE.call_once(|| {
+            dotenv().ok();
+            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+            let pool = connection_pool(database_url.as_str(), 4).unwrap();
+            migration(&pool).unwrap();
+            TRANSACTION = Some(TransactionManager::new(pool));
+        });
+
+        TRANSACTION.clone().unwrap()
     }
 }

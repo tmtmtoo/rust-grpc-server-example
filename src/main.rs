@@ -8,51 +8,80 @@ extern crate diesel_migrations;
 extern crate derive_new;
 #[macro_use]
 extern crate log;
+#[macro_use]
+extern crate envconfig_derive;
 
 mod component;
-mod controller;
-mod domain;
-mod gateway;
 mod infrastructure;
 mod schema;
-mod usecase;
+mod service;
 
 use anyhow::*;
-use component::*;
-use controller::grpc::greet_server::GreetServer;
-use controller::{GreetController, Route};
-use gateway::Adaptor;
-use infrastructure::db;
+use envconfig::Envconfig;
+use infrastructure::*;
+use service::*;
 use std::sync::Arc;
+use thiserror::Error;
 use tonic::transport::Server;
-use usecase::GreetUseCase;
+
+#[derive(Envconfig)]
+struct Config {
+    #[envconfig(from = "DATABASE_URL")]
+    database_url: String,
+    #[envconfig(from = "SOCKET_ADDR", default = "0.0.0.0:5001")]
+    socket_addr: String,
+}
+
+#[derive(Error, Debug)]
+enum MainError {
+    #[error("invalid config: {0}")]
+    InvalidConfig(Box<dyn std::error::Error + Send + Sync + 'static>),
+    #[error("failed to connect to db: {0}")]
+    FailedToConnectDB(Box<dyn std::error::Error + Send + Sync + 'static>),
+    #[error("failed to migrate db: {0}")]
+    FailedToMigrateDB(Box<dyn std::error::Error + Send + Sync + 'static>),
+    #[error("failed to run service: {0}")]
+    FailedToRunService(Box<dyn std::error::Error + Send + Sync + 'static>),
+}
 
 #[tokio::main]
 async fn main() -> Result<()> {
     env_logger::init();
 
-    let pool = db::connection_pool("postgres://dev@localhost:5432/dev", 4)?;
+    let config = Config::init().map_err(|e| MainError::InvalidConfig(Box::new(e)))?;
 
-    db::migration(&pool)?;
+    let pool = db::connection_pool(config.database_url, 4)
+        .map_err(|e| MainError::FailedToConnectDB(Box::new(e)))?;
 
-    let adaptor = Arc::new(Adaptor::new(db::TransactionManager::new(pool)));
+    db::migration(&pool).map_err(|e| MainError::FailedToMigrateDB(Box::new(e)))?;
 
-    let addr = "0.0.0.0:5001".parse()?;
+    let adaptor = Arc::new(greet_service::Adaptor::new(db::TransactionManager::new(
+        pool,
+    )));
 
-    info!("Greet Service listening on {}", addr);
+    let addr = config
+        .socket_addr
+        .parse()
+        .map_err(|e| MainError::InvalidConfig(Box::new(e)))?;
+
+    info!("Service listening on {}", addr);
 
     Server::builder()
-        .add_service(GreetServer::new(Route {
-            greet: WithLogging::new(
-                "greet controller",
-                GreetController::new(WithLogging::new(
-                    "greet usecase",
-                    GreetUseCase::new(adaptor.clone()),
-                )),
+        .add_service(grpc::GreetServer::new(grpc::Route {
+            greet: WithPerf::new(
+                "measurement greet controller",
+                WithLogging::new(
+                    "greet controller",
+                    greet_service::GreetController::new(WithLogging::new(
+                        "greet usecase",
+                        greet_service::GreetUseCase::new(adaptor.clone()),
+                    )),
+                ),
             ),
         }))
         .serve(addr)
-        .await?;
+        .await
+        .map_err(|e| MainError::FailedToRunService(Box::new(e)))?;
 
     Ok(())
 }

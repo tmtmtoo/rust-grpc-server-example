@@ -1,7 +1,7 @@
-use super::grpc::{HelloReply, HelloRequest};
+use super::model;
+use super::usecase::*;
 use crate::component::*;
-use crate::domain::model;
-use crate::usecase::*;
+use crate::infrastructure::grpc::{HelloReply, HelloRequest};
 use anyhow::*;
 use async_trait::*;
 use std::convert::TryFrom;
