@@ -51,3 +51,25 @@ impl TransactionManager {
         conn.transaction(|| f(DbConn(&*conn)))
     }
 }
+
+#[cfg(test)]
+pub fn get_test_transaction_manager() -> TransactionManager {
+    use dotenv::dotenv;
+    use std::env;
+    use std::sync::Once;
+
+    static mut TRANSACTION: Option<TransactionManager> = None;
+    static ONCE: Once = Once::new();
+
+    unsafe {
+        ONCE.call_once(|| {
+            dotenv().ok();
+            let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+            let pool = connection_pool(database_url.as_str(), 4).unwrap();
+            migration(&pool).unwrap();
+            TRANSACTION = Some(TransactionManager::new(pool));
+        });
+
+        TRANSACTION.clone().unwrap()
+    }
+}

@@ -10,22 +10,15 @@ extern crate derive_new;
 extern crate log;
 
 mod component;
-mod controller;
-mod domain;
-mod gateway;
 mod infrastructure;
 mod schema;
-mod usecase;
+mod service;
 
 use anyhow::*;
-use component::*;
-use controller::grpc::greet_server::GreetServer;
-use controller::{GreetController, Route};
-use gateway::Adaptor;
-use infrastructure::db;
+use infrastructure::*;
+use service::*;
 use std::sync::Arc;
 use tonic::transport::Server;
-use usecase::GreetUseCase;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -35,19 +28,21 @@ async fn main() -> Result<()> {
 
     db::migration(&pool)?;
 
-    let adaptor = Arc::new(Adaptor::new(db::TransactionManager::new(pool)));
+    let adaptor = Arc::new(greet_service::Adaptor::new(db::TransactionManager::new(
+        pool,
+    )));
 
     let addr = "0.0.0.0:5001".parse()?;
 
-    info!("Greet Service listening on {}", addr);
+    info!("Service listening on {}", addr);
 
     Server::builder()
-        .add_service(GreetServer::new(Route {
+        .add_service(grpc::GreetServer::new(grpc::Route {
             greet: WithLogging::new(
-                "greet controller",
-                GreetController::new(WithLogging::new(
-                    "greet usecase",
-                    GreetUseCase::new(adaptor.clone()),
+                "Greet Controller",
+                greet_service::GreetController::new(WithLogging::new(
+                    "Greet UseCase",
+                    greet_service::GreetUseCase::new(adaptor.clone()),
                 )),
             ),
         }))
