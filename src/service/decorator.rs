@@ -58,7 +58,7 @@ where
 
         let response = self.inner.handle(request).await;
 
-        debug!("{}: elapsed: {:?}", self.name, now.elapsed());
+        debug!("{}: {:?} sec", self.name, now.elapsed().as_secs_f64());
 
         response
     }
