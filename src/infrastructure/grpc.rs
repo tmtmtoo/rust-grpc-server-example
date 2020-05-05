@@ -10,19 +10,19 @@ pub use proto::greet_server::GreetServer;
 pub use proto::{HelloReply, HelloRequest};
 pub use tonic::{Request, Response, Status};
 
-pub struct Route<G> {
-    pub greet: G,
+pub struct Route<S> {
+    pub say_hello: S,
 }
 
 #[tonic::async_trait]
-impl<G> Greet for Route<G>
+impl<S> Greet for Route<S>
 where
-    for<'a> G: Component<'a, Request<HelloRequest>, Result<Response<HelloReply>, Status>>,
+    for<'a> S: Component<'a, Request<HelloRequest>, Result<Response<HelloReply>, Status>>,
 {
     async fn say_hello(
         &self,
         request: Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
-        self.greet.handle(&request).await
+        self.say_hello.handle(&request).await
     }
 }

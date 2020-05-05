@@ -16,22 +16,22 @@ impl TryFrom<&HelloRequest> for model::Greeting {
     }
 }
 
-impl<'a> Into<GreetUseCaseRequest<'a>> for &'a model::Greeting {
-    fn into(self) -> GreetUseCaseRequest<'a> {
-        GreetUseCaseRequest::new(self)
+impl<'a> Into<SayHelloUseCaseRequest<'a>> for &'a model::Greeting {
+    fn into(self) -> SayHelloUseCaseRequest<'a> {
+        SayHelloUseCaseRequest::new(self)
     }
 }
 
 #[derive(new)]
-pub struct GreetController<U> {
+pub struct SayHelloController<U> {
     usecase: U,
 }
 
 #[async_trait]
 impl<'a, U> Component<'a, Request<HelloRequest>, Result<Response<HelloReply>, Status>>
-    for GreetController<U>
+    for SayHelloController<U>
 where
-    for<'u> U: Component<'u, model::Greeting, GreetUseCaseResult>,
+    for<'u> U: Component<'u, model::Greeting, SayHelloUseCaseResult>,
 {
     async fn handle(
         &self,

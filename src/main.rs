@@ -68,13 +68,13 @@ async fn main() -> Result<()> {
 
     Server::builder()
         .add_service(grpc::GreetServer::new(grpc::Route {
-            greet: WithPerf::new(
-                "measurement greet controller",
+            say_hello: WithPerf::new(
+                "measurement say_hello",
                 WithLogging::new(
-                    "greet controller",
-                    greet_service::GreetController::new(WithLogging::new(
-                        "greet usecase",
-                        greet_service::GreetUseCase::new(adaptor.clone()),
+                    "say_hello controller",
+                    greet_service::SayHelloController::new(WithLogging::new(
+                        "say_hello usecase",
+                        greet_service::SayHelloUseCase::new(adaptor.clone()),
                     )),
                 ),
             ),
