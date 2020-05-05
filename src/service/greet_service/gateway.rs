@@ -55,7 +55,7 @@ where
                     .map(|_| ())
                     .map_err(Into::into)
             })
-            .map_err(|e| QueryError::new(QueryErrorKind::Other, e))
+            .map_err(Into::into)
         })
         .await
         .map_err(|e| QueryError::new(QueryErrorKind::Other, e))
