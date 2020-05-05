@@ -1,3 +1,4 @@
+use crate::infrastructure::db::DbError;
 use anyhow::*;
 use derive_more::{AsRef, Display};
 use std::sync::Arc;
@@ -34,5 +35,26 @@ impl QueryError {
 impl PartialEq for QueryError {
     fn eq(&self, other: &Self) -> bool {
         self.kind.eq(&other.kind)
+    }
+}
+
+impl From<DbError> for QueryError {
+    fn from(value: DbError) -> Self {
+        match value {
+            DbError::Connection(e) => QueryError::new(QueryErrorKind::FailedToConnectStore, e),
+            DbError::Handling(e) => QueryError::new(
+                match &e {
+                    diesel::result::Error::InvalidCString(_)
+                    | diesel::result::Error::QueryBuilderError(_)
+                    | diesel::result::Error::DeserializationError(_)
+                    | diesel::result::Error::SerializationError(_) => {
+                        QueryErrorKind::FailedToConstructRequest
+                    }
+                    diesel::result::Error::DatabaseError(_, _) => QueryErrorKind::InvalidRequest,
+                    _ => QueryErrorKind::Other,
+                },
+                e,
+            ),
+        }
     }
 }
