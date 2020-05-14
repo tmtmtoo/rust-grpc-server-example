@@ -17,7 +17,7 @@ uuid = { version = "0.8.1", features = ["v4"] }
 chrono = "0.4.11"
 log = "0.4.8"
 env_logger = "0.7.1"
-anyhow = "1.0.29"
+anyhow = "1.0.30"
 thiserror = "1.0.17"
 derive-new = "0.5.8"
 async-trait = "0.1.30"
