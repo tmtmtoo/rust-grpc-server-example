@@ -55,9 +55,10 @@ async fn main() -> Result<()> {
 
     db::migration(&pool).map_err(|e| MainError::FailedToMigrateDB(Box::new(e)))?;
 
-    let adaptor = Arc::new(greet_service::Adaptor::new(db::TransactionManager::new(
-        pool,
-    )));
+    let adaptor = Arc::new(WithLogging::new(
+        "adaptor",
+        greet_service::Adaptor::new(db::TransactionManager::new(pool)),
+    ));
 
     let addr = config
         .socket_addr
@@ -72,10 +73,10 @@ async fn main() -> Result<()> {
                 "measurement say_hello",
                 WithLogging::new(
                     "say_hello controller",
-                    greet_service::SayHelloController::new(WithLogging::new(
+                    greet_service::SayHelloController::new(Box::new(WithLogging::new(
                         "say_hello usecase",
                         greet_service::SayHelloUseCase::new(adaptor.clone()),
-                    )),
+                    ))),
                 ),
             ),
         }))

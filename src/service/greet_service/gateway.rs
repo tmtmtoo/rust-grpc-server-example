@@ -2,7 +2,7 @@ use super::*;
 use crate::component::*;
 use crate::infrastructure::db;
 use crate::schema::greetings;
-use crate::service::query_error::*;
+use crate::service::query_error::{QueryError, QueryErrorKind, QueryResult};
 use async_trait::async_trait;
 use derive_new::*;
 use diesel::prelude::*;
@@ -15,7 +15,7 @@ pub struct Adaptor {
 
 #[cfg(test)]
 pub struct StubAdaptor {
-    save_greeting_result: super::SaveGreetingResult,
+    save_greeting_result: QueryResult<()>,
 }
 
 #[derive(Debug, Clone, PartialEq, Insertable)]
@@ -26,26 +26,21 @@ struct GreetingRecord {
     created_at: chrono::naive::NaiveDateTime,
 }
 
-impl<'a> From<&'a SaveGreetingRequest<'a>> for GreetingRecord {
-    fn from(value: &'a SaveGreetingRequest<'a>) -> Self {
-        let greeting = value.as_ref();
+impl From<&model::Greeting> for GreetingRecord {
+    fn from(value: &model::Greeting) -> Self {
         Self {
-            id: *(greeting.as_ref() as &model::Uuid).as_ref(),
-            name: (greeting.as_ref() as &model::Name).as_ref().to_owned(),
-            created_at: *(greeting.as_ref() as &model::Datetime).as_ref(),
+            id: *(value.as_ref() as &model::Uuid).as_ref(),
+            name: (value.as_ref() as &model::Name).as_ref().to_owned(),
+            created_at: *(value.as_ref() as &model::Datetime).as_ref(),
         }
     }
 }
 
 #[async_trait]
-impl<'a, RQ: 'a> Component<'a, RQ, SaveGreetingResult> for Adaptor
-where
-    RQ: Send + Sync,
-    &'a RQ: Into<SaveGreetingRequest<'a>>,
-{
-    async fn handle(&self, request: &'a RQ) -> SaveGreetingResult {
+impl Component<model::Greeting, QueryResult<()>> for Adaptor {
+    async fn handle(&self, request: &model::Greeting) -> QueryResult<()> {
         let tx = self.tx.clone();
-        let row = GreetingRecord::from(&request.into());
+        let row = GreetingRecord::from(request);
 
         task::spawn_blocking(move || {
             tx.scope(|conn| {
@@ -65,12 +60,8 @@ where
 
 #[cfg(test)]
 #[async_trait]
-impl<'a, RQ: 'a> Component<'a, RQ, SaveGreetingResult> for StubAdaptor
-where
-    RQ: Send + Sync,
-    &'a RQ: Into<SaveGreetingRequest<'a>>,
-{
-    async fn handle(&self, _: &'a RQ) -> SaveGreetingResult {
+impl Component<model::Greeting, QueryResult<()>> for StubAdaptor {
+    async fn handle(&self, _: &model::Greeting) -> QueryResult<()> {
         self.save_greeting_result.clone()
     }
 }
@@ -79,20 +70,13 @@ where
 mod tests {
     use super::*;
 
-    impl<'a> Into<SaveGreetingRequest<'a>> for &'a SaveGreetingRequest<'a> {
-        fn into(self) -> SaveGreetingRequest<'a> {
-            SaveGreetingRequest::new(self.as_ref())
-        }
-    }
-
     #[tokio::test]
     #[ignore]
     async fn insert_greeting_row() {
         let tx = db::get_test_transaction_manager();
         let adaptor = Adaptor::new(tx);
         let greeting = model::Greeting::try_new("foo").unwrap();
-        let request = SaveGreetingRequest::new(&greeting);
-        let result = adaptor.handle(&request).await;
+        let result = adaptor.handle(&greeting).await;
         assert!(result.is_ok())
     }
 }

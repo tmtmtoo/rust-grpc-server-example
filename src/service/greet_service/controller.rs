@@ -4,6 +4,7 @@ use crate::component::*;
 use crate::infrastructure::grpc::{HelloReply, HelloRequest};
 use anyhow::*;
 use async_trait::*;
+use derive_more::AsRef;
 use std::convert::TryFrom;
 use tonic::{Request, Response, Status};
 
@@ -16,31 +17,28 @@ impl TryFrom<&HelloRequest> for model::Greeting {
     }
 }
 
-impl<'a> Into<SayHelloUseCaseRequest<'a>> for &'a model::Greeting {
-    fn into(self) -> SayHelloUseCaseRequest<'a> {
-        SayHelloUseCaseRequest::new(self)
-    }
+#[derive(new, AsRef, Debug)]
+pub struct UsecaseRequest {
+    #[as_ref]
+    say_hello: SayHelloUseCaseRequest,
 }
 
 #[derive(new)]
-pub struct SayHelloController<U> {
-    usecase: U,
+pub struct SayHelloController {
+    usecase: Box<dyn Component<UsecaseRequest, SayHelloUseCaseResult>>,
 }
 
 #[async_trait]
-impl<'a, U> Component<'a, Request<HelloRequest>, Result<Response<HelloReply>, Status>>
-    for SayHelloController<U>
-where
-    for<'u> U: Component<'u, model::Greeting, SayHelloUseCaseResult>,
-{
+impl Component<Request<HelloRequest>, Result<Response<HelloReply>, Status>> for SayHelloController {
     async fn handle(
         &self,
-        request: &'a Request<HelloRequest>,
+        request: &Request<HelloRequest>,
     ) -> Result<Response<HelloReply>, Status> {
         let greeting = model::Greeting::try_from(request.get_ref())?;
+        let request = UsecaseRequest::new(SayHelloUseCaseRequest::new(greeting));
 
         self.usecase
-            .handle(&greeting)
+            .handle(&request)
             .await
             .map(|message| {
                 Response::new(HelloReply {
@@ -54,4 +52,30 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::service::query_error::*;
+
+    #[tokio::test]
+    async fn handle_ok() {
+        let usecase = SayHelloUseCaseStub::new(Ok(model::Message::new("hello", "foo", "😄")));
+        let controller = SayHelloController::new(Box::new(usecase));
+        let result = controller
+            .handle(&Request::new(HelloRequest { name: "foo".into() }))
+            .await;
+        assert!(result.is_ok())
+    }
+
+    #[tokio::test]
+    async fn handle_err_failed_to_handle_storing() {
+        let usecase = SayHelloUseCaseStub::new(Err(SayHelloUseCaseError::FailedToHandleStoring(
+            QueryError::new(
+                QueryErrorKind::FailedToConnectStore,
+                std::io::Error::from(std::io::ErrorKind::Other),
+            ),
+        )));
+        let controller = SayHelloController::new(Box::new(usecase));
+        let result = controller
+            .handle(&Request::new(HelloRequest { name: "foo".into() }))
+            .await;
+        assert!(result.is_err());
+    }
 }

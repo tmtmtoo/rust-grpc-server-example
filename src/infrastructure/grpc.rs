@@ -17,7 +17,7 @@ pub struct Route<S> {
 #[tonic::async_trait]
 impl<S> Greet for Route<S>
 where
-    for<'a> S: Component<'a, Request<HelloRequest>, Result<Response<HelloReply>, Status>>,
+    S: Component<Request<HelloRequest>, Result<Response<HelloReply>, Status>>,
 {
     async fn say_hello(
         &self,
