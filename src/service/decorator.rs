@@ -39,6 +39,40 @@ where
 }
 
 #[derive(new)]
+pub struct WithLoggingByShared<RQ, RS, ER> {
+    name: &'static str,
+    inner: std::sync::Arc<dyn Component<RQ, Result<RS, ER>>>,
+    _rq: PhantomData<RQ>,
+    _rs: PhantomData<RS>,
+    _er: PhantomData<ER>,
+}
+
+#[async_trait]
+impl<RQ, RS, ER> Component<RQ, Result<RS, ER>> for WithLoggingByShared<RQ, RS, ER>
+where
+    RQ: std::fmt::Debug + Send + Sync + 'static,
+    RS: std::fmt::Debug + Send + Sync + 'static,
+    ER: std::fmt::Debug + Send + Sync + 'static,
+{
+    async fn handle(&self, request: &RQ) -> Result<RS, ER> {
+        self.inner
+            .handle(request)
+            .await
+            .map(|response| {
+                debug!(
+                    "{}: request: {:?}, response: {:?}",
+                    self.name, request, response
+                );
+                response
+            })
+            .map_err(|error| {
+                warn!("{}: request: {:?}, error: {:?}", self.name, request, error);
+                error
+            })
+    }
+}
+
+#[derive(new)]
 pub struct WithPerf<RQ, RS, C> {
     name: &'static str,
     inner: C,

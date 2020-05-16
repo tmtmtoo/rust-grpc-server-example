@@ -10,15 +10,12 @@ pub use proto::greet_server::GreetServer;
 pub use proto::{HelloReply, HelloRequest};
 pub use tonic::{Request, Response, Status};
 
-pub struct Route<S> {
-    pub say_hello: S,
+pub struct Route {
+    pub say_hello: Box<dyn Component<Request<HelloRequest>, Result<Response<HelloReply>, Status>>>,
 }
 
 #[tonic::async_trait]
-impl<S> Greet for Route<S>
-where
-    S: Component<Request<HelloRequest>, Result<Response<HelloReply>, Status>>,
-{
+impl Greet for Route {
     async fn say_hello(
         &self,
         request: Request<HelloRequest>,

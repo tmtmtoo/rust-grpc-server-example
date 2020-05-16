@@ -4,7 +4,6 @@ use crate::service::query_error::*;
 use anyhow::*;
 use async_trait::async_trait;
 use derive_more::AsRef;
-use std::sync::Arc;
 use thiserror::Error as ThisError;
 
 #[derive(new, Debug, AsRef)]
@@ -22,7 +21,7 @@ pub type SayHelloUseCaseResult = Result<model::Message, SayHelloUseCaseError>;
 
 #[derive(new)]
 pub struct SayHelloUseCase {
-    repository: Arc<dyn Component<model::Greeting, QueryResult<()>>>,
+    repository: Box<dyn Component<model::Greeting, QueryResult<()>>>,
 }
 
 #[async_trait]
@@ -68,7 +67,7 @@ mod tests {
 
     #[tokio::test]
     async fn handle_ok() {
-        let stub = Arc::new(StubRepository::new(Ok(())));
+        let stub = Box::new(StubRepository::new(Ok(())));
         let usecase = SayHelloUseCase::new(stub);
         let greeting = model::Greeting::try_new("foo").unwrap();
         let request = SayHelloUseCaseRequest::new(greeting);
@@ -82,7 +81,7 @@ mod tests {
             QueryErrorKind::FailedToConnectStore,
             std::io::Error::from(std::io::ErrorKind::TimedOut),
         );
-        let stub = Arc::new(StubRepository::new(Err(query_error.clone())));
+        let stub = Box::new(StubRepository::new(Err(query_error.clone())));
         let usecase = SayHelloUseCase::new(stub);
         let greeting = model::Greeting::try_new("foo").unwrap();
         let request = SayHelloUseCaseRequest::new(greeting);
