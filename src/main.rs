@@ -15,12 +15,11 @@ mod component;
 mod infrastructure;
 mod schema;
 mod service;
+mod stage;
 
 use anyhow::*;
 use envconfig::Envconfig;
 use infrastructure::*;
-use service::*;
-use std::sync::Arc;
 use thiserror::Error;
 use tonic::transport::Server;
 
@@ -30,6 +29,8 @@ struct Config {
     database_url: String,
     #[envconfig(from = "SOCKET_ADDR", default = "0.0.0.0:5001")]
     socket_addr: String,
+    #[envconfig(from = "TEST", default = "false")]
+    is_test: bool,
 }
 
 #[derive(Error, Debug)]
@@ -55,9 +56,11 @@ async fn main() -> Result<()> {
 
     db::migration(&pool).map_err(|e| MainError::FailedToMigrateDB(Box::new(e)))?;
 
-    let adaptor = Arc::new(greet_service::Adaptor::new(db::TransactionManager::new(
-        pool,
-    )));
+    let component_builder: Box<dyn stage::ComponentBuilder> = if config.is_test {
+        Box::new(stage::Test::new(pool))
+    } else {
+        Box::new(stage::Dev::new(pool))
+    };
 
     let addr = config
         .socket_addr
@@ -67,18 +70,7 @@ async fn main() -> Result<()> {
     info!("Service listening on {}", addr);
 
     Server::builder()
-        .add_service(grpc::GreetServer::new(grpc::Route {
-            say_hello: WithPerf::new(
-                "measurement say_hello",
-                WithLogging::new(
-                    "say_hello controller",
-                    greet_service::SayHelloController::new(WithLogging::new(
-                        "say_hello usecase",
-                        greet_service::SayHelloUseCase::new(adaptor.clone()),
-                    )),
-                ),
-            ),
-        }))
+        .add_service(grpc::GreetServer::new(component_builder.grpc_route()))
         .serve(addr)
         .await
         .map_err(|e| MainError::FailedToRunService(Box::new(e)))?;

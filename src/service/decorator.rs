@@ -13,14 +13,48 @@ pub struct WithLogging<RQ, RS, ER, C> {
 }
 
 #[async_trait]
-impl<'b, RQ, RS, ER, C> Component<'b, RQ, Result<RS, ER>> for WithLogging<RQ, RS, ER, C>
+impl<RQ, RS, ER, C> Component<RQ, Result<RS, ER>> for WithLogging<RQ, RS, ER, C>
 where
     RQ: std::fmt::Debug + Send + Sync + 'static,
     RS: std::fmt::Debug + Send + Sync + 'static,
     ER: std::fmt::Debug + Send + Sync + 'static,
-    for<'a> C: Component<'a, RQ, Result<RS, ER>>,
+    C: Component<RQ, Result<RS, ER>>,
 {
-    async fn handle(&self, request: &'b RQ) -> Result<RS, ER> {
+    async fn handle(&self, request: &RQ) -> Result<RS, ER> {
+        self.inner
+            .handle(request)
+            .await
+            .map(|response| {
+                debug!(
+                    "{}: request: {:?}, response: {:?}",
+                    self.name, request, response
+                );
+                response
+            })
+            .map_err(|error| {
+                warn!("{}: request: {:?}, error: {:?}", self.name, request, error);
+                error
+            })
+    }
+}
+
+#[derive(new)]
+pub struct WithLoggingByShared<RQ, RS, ER> {
+    name: &'static str,
+    inner: std::sync::Arc<dyn Component<RQ, Result<RS, ER>>>,
+    _rq: PhantomData<RQ>,
+    _rs: PhantomData<RS>,
+    _er: PhantomData<ER>,
+}
+
+#[async_trait]
+impl<RQ, RS, ER> Component<RQ, Result<RS, ER>> for WithLoggingByShared<RQ, RS, ER>
+where
+    RQ: std::fmt::Debug + Send + Sync + 'static,
+    RS: std::fmt::Debug + Send + Sync + 'static,
+    ER: std::fmt::Debug + Send + Sync + 'static,
+{
+    async fn handle(&self, request: &RQ) -> Result<RS, ER> {
         self.inner
             .handle(request)
             .await
@@ -47,13 +81,13 @@ pub struct WithPerf<RQ, RS, C> {
 }
 
 #[async_trait]
-impl<'b, RQ, RS, C> Component<'b, RQ, RS> for WithPerf<RQ, RS, C>
+impl<RQ, RS, C> Component<RQ, RS> for WithPerf<RQ, RS, C>
 where
     RQ: Send + Sync + 'static,
     RS: Send + Sync + 'static,
-    for<'a> C: Component<'a, RQ, RS>,
+    C: Component<RQ, RS>,
 {
-    async fn handle(&self, request: &'b RQ) -> RS {
+    async fn handle(&self, request: &RQ) -> RS {
         let now = std::time::Instant::now();
 
         let response = self.inner.handle(request).await;

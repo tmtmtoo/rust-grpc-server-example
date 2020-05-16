@@ -58,3 +58,5 @@ impl From<DbError> for QueryError {
         }
     }
 }
+
+pub type QueryResult<T> = Result<T, QueryError>;
