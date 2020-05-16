@@ -43,7 +43,7 @@ impl ComponentBuilder for Dev {
                         "say_hello usecase",
                         greet_service::SayHelloUseCase::new(Box::new(WithLoggingByShared::new(
                             "save greeting",
-                            adaptor.clone(),
+                            adaptor,
                         ))),
                     ))),
                 ),
