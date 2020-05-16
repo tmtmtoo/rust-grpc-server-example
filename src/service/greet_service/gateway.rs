@@ -2,7 +2,7 @@ use super::*;
 use crate::component::*;
 use crate::infrastructure::db;
 use crate::schema::greetings;
-use crate::service::query_error::{QueryError, QueryErrorKind, QueryResult};
+use crate::service::query::{QueryError, QueryErrorKind, QueryResult};
 use async_trait::async_trait;
 use derive_new::*;
 use diesel::prelude::*;

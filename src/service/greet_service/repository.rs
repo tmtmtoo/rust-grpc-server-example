@@ -3,7 +3,7 @@ use super::model;
 #[cfg(test)]
 use crate::component::*;
 #[cfg(test)]
-use crate::service::query_error::*;
+use crate::service::query::*;
 #[cfg(test)]
 use async_trait::async_trait;
 

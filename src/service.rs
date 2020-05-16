@@ -1,5 +1,5 @@
 mod decorator;
-mod query_error;
+mod query;
 
 pub mod greet_service;
 pub use decorator::*;

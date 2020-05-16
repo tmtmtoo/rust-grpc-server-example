@@ -1,6 +1,6 @@
 use super::*;
 use crate::component::*;
-use crate::service::query_error::*;
+use crate::service::query::*;
 use anyhow::*;
 use async_trait::async_trait;
 use derive_more::AsRef;
@@ -77,16 +77,16 @@ mod tests {
 
     #[tokio::test]
     async fn handle_err() {
-        let query_error = QueryError::new(
+        let query = QueryError::new(
             QueryErrorKind::FailedToConnectStore,
             std::io::Error::from(std::io::ErrorKind::TimedOut),
         );
-        let stub = Box::new(StubRepository::new(Err(query_error.clone())));
+        let stub = Box::new(StubRepository::new(Err(query.clone())));
         let usecase = SayHelloUseCase::new(stub);
         let greeting = model::Greeting::try_new("foo").unwrap();
         let request = SayHelloUseCaseRequest::new(greeting);
         let actual = usecase.handle(&request).await.unwrap_err();
-        let expected = SayHelloUseCaseError::FailedToHandleStoring(query_error.clone());
+        let expected = SayHelloUseCaseError::FailedToHandleStoring(query.clone());
         assert_eq!(actual, expected);
     }
 }
