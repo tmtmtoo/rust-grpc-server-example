@@ -52,7 +52,7 @@ impl Component<Request<HelloRequest>, Result<Response<HelloReply>, Status>> for 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::service::query_error::*;
+    use crate::service::query::*;
 
     #[tokio::test]
     async fn handle_ok() {
