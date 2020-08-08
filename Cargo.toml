@@ -37,4 +37,4 @@ default-features = false
 features = ["user-hooks"]
 
 [build-dependencies]
-tonic-build = "0.2"
+tonic-build = "0.3"
