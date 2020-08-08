@@ -15,7 +15,7 @@ diesel_migrations = "1.4.0"
 r2d2 = "0.8.9"
 uuid = { version = "0.8.1", features = ["v4"] }
 chrono = "0.4.13"
-log = "0.4.8"
+log = "0.4.11"
 env_logger = "0.7.1"
 anyhow = "1.0.32"
 thiserror = "1.0.20"
