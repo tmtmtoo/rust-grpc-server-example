@@ -22,7 +22,7 @@ thiserror = "1.0.20"
 derive-new = "0.5.8"
 async-trait = "0.1.36"
 boolinator = "2.4.0"
-derive_more = "0.99.9"
+derive_more = "0.99.10"
 envconfig = "0.8.0"
 envconfig_derive = "0.8.0"
 
