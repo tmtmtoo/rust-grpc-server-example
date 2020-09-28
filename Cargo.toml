@@ -14,7 +14,7 @@ diesel = { version = "1.4.5", features = ["postgres", "chrono", "r2d2", "uuidv07
 diesel_migrations = "1.4.0"
 r2d2 = "0.8.9"
 uuid = { version = "0.8.1", features = ["v4"] }
-chrono = "0.4.15"
+chrono = "0.4.18"
 log = "0.4.11"
 env_logger = "0.7.1"
 anyhow = "1.0.32"
