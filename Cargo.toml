@@ -16,7 +16,7 @@ r2d2 = "0.8.9"
 uuid = { version = "0.8.1", features = ["v4"] }
 chrono = "0.4.15"
 log = "0.4.11"
-env_logger = "0.7.1"
+env_logger = "0.8.3"
 anyhow = "1.0.33"
 thiserror = "1.0.21"
 derive-new = "0.5.8"
